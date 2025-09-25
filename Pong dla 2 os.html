@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Pong 2 Graczy</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            background: #111;
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const paddleWidth = 10, paddleHeight = 100;
+    const player1 = { x: 10, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
+    const player2 = { x: canvas.width - 20, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
+    const ball = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        radius: 8,
+        speed: 5,
+        dx: 5,
+        dy: 3
+    };
+
+    function drawRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+    }
+
+    function drawBall(x, y, r, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function movePaddles() {
+        player1.y += player1.dy;
+        player2.y += player2.dy;
+
+        // Ograniczenie ruchu paletek do pola gry
+        player1.y = Math.max(Math.min(player1.y, canvas.height - paddleHeight), 0);
+        player2.y = Math.max(Math.min(player2.y, canvas.height - paddleHeight), 0);
+    }
+
+    function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        ball.dx = -ball.dx;
+        ball.dy = Math.random() > 0.5 ? 3 : -3;
+    }
+
+    function moveBall() {
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Odbicie od górnej i dolnej krawędzi
+        if (ball.y < 0 || ball.y > canvas.height) {
+            ball.dy *= -1;
+        }
+
+        // Odbicie od paletek
+        if (ball.x - ball.radius < player1.x + paddleWidth &&
+            ball.y > player1.y && ball.y < player1.y + paddleHeight) {
+            ball.dx *= -1;
+        }
+
+        if (ball.x + ball.radius > player2.x &&
+            ball.y > player2.y && ball.y < player2.y + paddleHeight) {
+            ball.dx *= -1;
+        }
+
+        // Punktacja (restart piłki)
+        if (ball.x < 0 || ball.x > canvas.width) {
+            resetBall();
+        }
+    }
+
+    function draw() {
+        drawRect(0, 0, canvas.width, canvas.height, "#111");
+
+        // Rysowanie paletek
+        drawRect(player1.x, player1.y, paddleWidth, paddleHeight, "white");
+        drawRect(player2.x, player2.y, paddleWidth, paddleHeight, "white");
+
+        // Rysowanie piłki
+        drawBall(ball.x, ball.y, ball.radius, "white");
+    }
+
+    function update() {
+        movePaddles();
+        moveBall();
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", (e) => {
+        switch (e.key) {
+            case "w":
+            case "W":
+                player1.dy = -6;
+                break;
+            case "s":
+            case "S":
+                player1.dy = 6;
+                break;
+            case "ArrowUp":
+                player2.dy = -6;
+                break;
+            case "ArrowDown":
+                player2.dy = 6;
+                break;
+        }
+    });
+
+    document.addEventListener("keyup", (e) => {
+        switch (e.key) {
+            case "w":
+            case "W":
+            case "s":
+            case "S":
+                player1.dy = 0;
+                break;
+            case "ArrowUp":
+            case "ArrowDown":
+                player2.dy = 0;
+                break;
+        }
+    });
+
+    update(); // Start gry
+</script>
+</body>
+</html>
